@@ -7,7 +7,9 @@ library(rgdal)
 library(sf)
 library(leafletCN)
 library(leaflet)
+library(REmap)
 }
+
 mapprepare()
 
 #read data
