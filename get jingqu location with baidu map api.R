@@ -1,9 +1,14 @@
 library("httr") 
 library("magrittr") 
 library("jsonlite")
+library("devtools")
+library("leafletCN")
+library("leaflet")
+install.packages("baidumap")
+library("dplyr")
 #data input
-jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/JVT.csv",stringsAsFactors = FALSE)[,-1]
-jqname<-unique(jqdata$Name)
+jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
+jqname<-as.character(unique(jqdata$Name))
 
 GetJD <- function(address){
   url = "http://api.map.baidu.com/geocoder/v2/"
@@ -30,3 +35,26 @@ GetJD <- function(address){
 }
 myresult<-GetJD(jqname)
 myresult$Name<-jqname
+
+#coordination transform
+myresult2<-myresult
+x_PI <- 3.14159265358979324 * 3000.0 / 180.0
+x<-myresult$lng-0.0065
+y<-myresult$lat-0.006
+z<-sqrt(x^2+y^2)-0.00002*sin(y*x_PI)
+theta<-atan2(y,x)-0.000003 * cos(x * x_PI)
+myresult2$lng<-z*cos(theta)
+myresult2$lat<-z*sin(theta)
+#correction
+m <- leaflet() %>%
+  addTiles(
+    'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+    options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
+    attribution = '&copy; <a href="http://ditu.amap.com/">¸ßµÂµØÍ¼</a>',
+    group="Road Map"
+  ) %>% 
+  setView(118.788815,32.020729, zoom = 10)%>%
+  addMarkers(myresult2,lng=myresult2$lng,lat=myresult2$lat,popup=myresult$Name)
+m
+baidulocation<-myresult
+gaodelocation<-myresult2
