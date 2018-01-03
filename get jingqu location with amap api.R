@@ -6,6 +6,7 @@ library("leaflet")
 library('reshape2')
 library("dplyr")
 library('plyr')
+library('sf')
 #data input
 jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
@@ -66,7 +67,7 @@ correction$match<-correction$city==correction$City
 correction[which(correction$match=='FALSE'),c('Name','lng','lat')][3,]<-c('½­ËÕ²è²©Ô°','119.264435','31.924049')
 correctinfo<-correction[,c(-11)]
 #add markers to amap
-m <- leaflet() %>%
+p <- leaflet() %>%
   addTiles(
     'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
     options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
@@ -75,6 +76,18 @@ m <- leaflet() %>%
   ) %>% 
   setView(118.788815,32.020729, zoom = 10)%>%
   addMarkers(correctinfo,lng=as.numeric(correctinfo$lng),lat=as.numeric(correctinfo$lat),popup=correctinfo$Name)
-m
-baidulocation<-myresult
-gaodelocation<-myresult2
+p
+#format and output
+correctinfo$lng<-as.numeric(correctinfo$lng)
+correctinfo$lat<-as.numeric(correctinfo$lat)
+correctinfo<-as.data.frame(correctinfo)
+correctinfo$geo<-list()
+geo<-list(c(correctinfo$lng[10],correctinfo$lat[10]))
+class(geo[10])
+for(i in 1:length(correctinfo$citycode)){
+  geo[[i]]<-st_point(c(correctinfo$lng[i],correctinfo$lat[i]))
+}
+correctinfo$geo<-st_as_sfc(correctinfo$geo)
+st_crs(correctinfo)<-"+proj=longlat +datum=NAD27 +no_defs +ellps=clrk66 +nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat"
+geo<-st_as_sfc(geo)
+st_write(geo,"co.shp")
