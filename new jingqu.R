@@ -43,7 +43,7 @@ jqdata$Name[grep("铁山寺",jqdata$Name)]<-"盱眙铁山寺国家森林公园"
 jqdata$Name[grep("扬州博物",jqdata$Name)]<-"扬州博物馆"
 jqdata$Name[grep("艾山九龙景区",jqdata$Name)]<-"邳州艾山九龙景区"
 jqdata$Name[grep("恐龙",jqdata$Name)]<-"常州环球恐龙城"
-
+jqdata$Name[grep("静思园",jqdata$Name)]<-"吴江静思园"
 
 
 jqdata$Name[grep("羽泉",jqdata$Name)]<-"连云港东海羽泉景区"
@@ -54,8 +54,6 @@ jqdata$Name[grep("盐城市阜宁金沙湖旅游区",jqdata$Name)]<-"阜宁金沙湖旅游区"
 jingqu$Name[grep("红山",jingqu$JINGQU)]<-name2017[grep("红山",name2017)]
 
 
-jingqu$Name[164]<-jingqu$JINGQU[164]
-jingqu$Name[160]<-"常州天目湖旅游区(御水温泉)"
 
 #get jingqu address
 name2017
