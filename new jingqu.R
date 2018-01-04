@@ -4,7 +4,7 @@ library(dplyr)
 library(maptools)
 
 #data input
-jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/JVT.csv",stringsAsFactors = FALSE)[,-1]
+jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
 jingqu<-st_read("F:/Administrator/Documents/R/Map/2011dian.shp",stringsAsFactors = FALSE)
 
 #substract 
@@ -33,7 +33,7 @@ jqdata$Name<-sub("苏州昆山","昆山",jqdata$Name)
 jqdata$Name<-sub("无锡宜兴|无锡市宜兴","宜兴",jqdata$Name)
 jqdata$Name<-sub("泰州姜堰","姜堰",jqdata$Name)
 jqdata$Name<-sub("南京市","南京",jqdata$Name)
-
+jqdata$Name[grep("静思园",jqdata$Name)]<-"吴江静思园"
 jqdata$Name[grep("寒山寺",jqdata$Name)]<-"苏州寒山寺"
 jqdata$Name[grep("团氿",jqdata$Name)]<-"宜兴团氿景区"
 jqdata$Name[grep("铁山寺",jqdata$Name)]<-"盱眙铁山寺国家森林公园"
@@ -50,12 +50,7 @@ jqdata$Name[grep("盐城市阜宁金沙湖旅游区",jqdata$Name)]<-"阜宁金沙湖旅游区"
 
 jingqu$Name[grep("红山",jingqu$JINGQU)]<-name2017[grep("红山",name2017)]
 
-grep(jq2017sub[97],jingqu$JINGQU)
-grep("亭林园",jingqu$JINGQU)
-grep("亭林园",jq2017sub)
 
-jingqu$Name[164]<-jingqu$JINGQU[164]
-jingqu$Name[160]<-"常州天目湖旅游区(御水温泉)"
 
 #file format transformation and output
 jingqusp<-as(jingqu,"Spatial")
