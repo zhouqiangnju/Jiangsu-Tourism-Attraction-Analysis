@@ -7,7 +7,9 @@ library("magrittr")
 library("jsonlite")
 
 #data input
-jqdata<-read.csv("C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
+dirhome<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/'
+dirwork<-'F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/'
+jqdata<-read.csv(paste(dirhome,'JVT.csv',sep=''),stringsAsFactors = FALSE)[,-1]
 jingqu<-st_read("C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/jingquwen.shp",stringsAsFactors = FALSE)
 
 #substract 
@@ -69,4 +71,4 @@ GetJD <- function(address){
 #file format transformation and output
 jingqusp<-as(jingqu,"Spatial")
 writeSpatialShape(jingqusp,"jingquwen.shp")
-write.csv(jqdata,"F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv")
+write.csv(jqdata,paste(dirhome,'JVT.csv',sep=''))

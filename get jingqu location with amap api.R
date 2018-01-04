@@ -7,7 +7,7 @@ library('reshape2')
 library("dplyr")
 library('plyr')
 #data input
-jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
+jqdata<-read.csv("C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
 testnames<-c('大丰中华麋鹿园景区','无锡江苏学政文化旅游区')
 GetJD <- function(address){
@@ -42,7 +42,6 @@ GetJD <- function(address){
 myresult<-GetJD(jqname)
 failresult<-GetJD(testnames)
 finalresult<-rbind(myresult,failresult)
-edit(finalresult)
 
 #coordination transform
 myresult2<-myresult
@@ -63,7 +62,7 @@ correction<-join(finalresult,jqchengshi,by='Name')
 correction$city<-sub('市',"",correction$city)
 correction$match<-correction$city==correction$City
 
-correction[which(correction$match=='FALSE'),c('Name','lng','lat')][3,]<-c('江苏茶博园','119.264435','31.924049')
+correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
 correctinfo<-correction[,c(-11)]
 #add markers to amap
 m <- leaflet() %>%
