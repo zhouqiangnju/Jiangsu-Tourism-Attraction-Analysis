@@ -7,7 +7,7 @@ library('reshape2')
 library("dplyr")
 library('plyr')
 library('sf')
-library(Rgtc)
+library('Rgctc2')
 #data input
 
 jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv",stringsAsFactors = FALSE)[,-1]
@@ -32,7 +32,6 @@ GetJD <- function(address){
       geoinfo<-geoinfo[,c(1,2,3,4,5,7,16,17)]
       geoinfo$Name<-i
       addinfo<-rbind(addinfo,geoinfo)
-      coord<-rbind(coord,geo)
     },error = function(e){
       cat(sprintf("任务【%s】处理失败!",i),sep = "/n")
       addfail<-c(rep("NA",length(names(addinfo))-1),i)
@@ -51,12 +50,8 @@ failresult<-GetJD(testnames)
 jqgeo<-rbind(myresult,failresult)
 
 #coordination transform(GCJ02-WGS84)
-for(i in 1:length(jqgeo$city)){
-geoi[[i]]<-gcj02_wgs84(jqgeo$lng[i],jqgeo$lat[i])
-}
-class(gcj02_wgs84(jqgeo$lng[i],jqgeo$lat[i]))
-#transform
-
+jqgeo$lng_wgs84<-gcj02_wgs84_lng(jqgeo$lng,jqgeo$lat)
+jqgeo$lat_wgs84<-gcj02_wgs84_lat(jqgeo$lng,jqgeo$lat)
 
 #correction
 jqinfo<-jqdata[,c(2,6)]

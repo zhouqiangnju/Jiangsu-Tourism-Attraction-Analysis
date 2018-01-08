@@ -20,7 +20,7 @@ transformlng<-function(lng, lat) {
   return(ret)
 }
 
-gcj02_wgs84<-function(lng, lat) {
+gcj02_wgs84_lng<-function(lng, lat) {
     dlat <- transformlat(lng - 105.0, lat - 35.0);
     dlng <- transformlng(lng - 105.0, lat - 35.0);
     radlat <- lat / 180.0 * PI;
@@ -31,7 +31,20 @@ gcj02_wgs84<-function(lng, lat) {
     dlng <- (dlng * 180.0) / (a / sqrtmagic * cos(radlat) * PI);
     mglat <- lat + dlat;
     mglng <- lng + dlng;
-    return(c(lng * 2 - mglng, lat * 2 - mglat))
+    return(lng * 2 - mglng)
   }
-  
+
+gcj02_wgs84_lat<-function(lng, lat) {
+  dlat <- transformlat(lng - 105.0, lat - 35.0);
+  dlng <- transformlng(lng - 105.0, lat - 35.0);
+  radlat <- lat / 180.0 * PI;
+  magic <- sin(radlat);
+  magic <- 1 - ee * magic * magic;
+  sqrtmagic <- sqrt(magic);
+  dlat <- (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * PI);
+  dlng <- (dlng * 180.0) / (a / sqrtmagic * cos(radlat) * PI);
+  mglat <- lat + dlat;
+  mglng <- lng + dlng;
+  return(lat * 2 - mglat)
+}
 
