@@ -7,10 +7,13 @@ library('reshape2')
 library("dplyr")
 library('plyr')
 library('sf')
+library(Rgtc)
 #data input
-jqdata<-read.csv("C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
+
+jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv",stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
-testnames<-c('大丰中华麋鹿园景区','无锡江苏学政文化旅游区')
+
+testnames<-c('大丰知青纪念馆','无锡江苏学政文化旅游区')
 GetJD <- function(address){
   url = "http://restapi.amap.com/v3/geocode/geo"
   header  <- c("User-Agent"="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36")
@@ -24,13 +27,14 @@ GetJD <- function(address){
       web <- GET(url,add_headers(.headers = header),query = payload)
       content <- web %>% content(as="text",encoding="UTF-8") %>% fromJSON(flatten = TRUE)
       geoinfo<-content$geocodes
-      geoinfo$lng<-substr(geoinfo$location,1,10)
-      geoinfo$lat<-substr(geoinfo$location,12,19)
+      geoinfo$lng<-as.numeric(substr(geoinfo$location,1,10))
+      geoinfo$lat<-as.numeric(substr(geoinfo$location,12,19))
       geoinfo<-geoinfo[,c(1,2,3,4,5,7,16,17)]
       geoinfo$Name<-i
       addinfo<-rbind(addinfo,geoinfo)
+      coord<-rbind(coord,geo)
     },error = function(e){
-      cat(sprintf("任务【%s】处理失败!",i),sep = "\n")
+      cat(sprintf("任务【%s】处理失败!",i),sep = "/n")
       addfail<-c(rep("NA",length(names(addinfo))-1),i)
       addinfo <- rbind(addinfo,addfail)
     })
@@ -38,21 +42,21 @@ GetJD <- function(address){
     print(sprintf("正在抓取【%s】地址",i))
   }
   print("所有数据全部抓取完毕!!!")
-  return(addinfo) 
+  return(addinfo)
+
 }
+
 myresult<-GetJD(jqname)
 failresult<-GetJD(testnames)
-finalresult<-rbind(myresult,failresult)
+jqgeo<-rbind(myresult,failresult)
 
-#coordination transform
-myresult2<-myresult
-x_PI <- 3.14159265358979324 * 3000.0 / 180.0
-x<-myresult$lng-0.0065
-y<-myresult$lat-0.006
-z<-sqrt(x^2+y^2)-0.00002*sin(y*x_PI)
-theta<-atan2(y,x)-0.000003 * cos(x * x_PI)
-myresult2$lng<-z*cos(theta)
-myresult2$lat<-z*sin(theta)
+#coordination transform(GCJ02-WGS84)
+for(i in 1:length(jqgeo$city)){
+geoi[[i]]<-gcj02_wgs84(jqgeo$lng[i],jqgeo$lat[i])
+}
+class(gcj02_wgs84(jqgeo$lng[i],jqgeo$lat[i]))
+#transform
+
 
 #correction
 jqinfo<-jqdata[,c(2,6)]
@@ -77,12 +81,10 @@ p <- leaflet() %>%
   addMarkers(correctinfo,lng=as.numeric(correctinfo$lng),lat=as.numeric(correctinfo$lat),popup=correctinfo$Name)
 p
 #format and output
-correctinfo$lng<-as.numeric(correctinfo$lng)
-correctinfo$lat<-as.numeric(correctinfo$lat)
+
 correctinfo<-as.data.frame(correctinfo)
 correctinfo$geo<-list()
-geo<-list(c(correctinfo$lng[10],correctinfo$lat[10]))
-class(geo[10])
+
 for(i in 1:length(correctinfo$citycode)){
   geo[[i]]<-st_point(c(correctinfo$lng[i],correctinfo$lat[i]))
 }
