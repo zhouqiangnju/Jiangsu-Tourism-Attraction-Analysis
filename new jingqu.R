@@ -61,8 +61,6 @@ jqdata$Name[grep("盐城市阜宁金沙湖旅游区",jqdata$Name)]<-"阜宁金沙湖旅游区"
 jingqu$Name[grep("红山",jingqu$JINGQU)]<-name2017[grep("红山",name2017)]
 
 
-<<<<<<< HEAD
-=======
 
 #get jingqu address
 name2017
@@ -79,4 +77,4 @@ GetJD <- function(address){
 #file format transformation and output
 jingqusp<-as(jingqu,"Spatial")
 writeSpatialShape(jingqusp,"jingquwen.shp")
-write.csv(jqdata,paste(dirhome,'JVT.csv',sep=''))
+write.csv(jqdata,paste(dirwork,'JVT.csv',sep=''))

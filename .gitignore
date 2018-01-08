@@ -34,3 +34,5 @@ vignettes/*.pdf
 JVT.csv
 JVT.csv
 new jingqu.R
+.Rproj.user
+get jingqu location with amap api.R
