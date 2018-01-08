@@ -8,9 +8,22 @@ library("dplyr")
 library('plyr')
 library('sf')
 #data input
-jqdata<-read.csv("C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
+jqdata<-read.csv("C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv",stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
-testnames<-c('大丰中华麋鹿园景区','无锡江苏学政文化旅游区')
+jqinfo<-jqdata[,c(2,6)]
+jqchengshi<-as.data.frame(table(jqinfo))
+jqchengshi<-jqchengshi[which(jqchengshi$Freq>0),][,-3]
+jqchengshi$Name<-as.character(jqchengshi$Name)
+
+for(i in 1:length(jqchengshi$Name)){
+  if(nchar(jqchengshi$Name[i])<=5)
+    jqchengshi$sname[i]<-jqchengshi$Name[i]
+  else
+    jqchengshi$sname[i]<-sub(jqchengshi$City[i],"",jqchengshi$Name[i])
+}
+sname<-jqchengshi$sname
+sname<-data.frame(jqname,sname)
+failnames<-c("大丰知青纪念馆","无锡江苏学政文化旅游区")
 GetJD <- function(address){
   url = "http://restapi.amap.com/v3/geocode/geo"
   header  <- c("User-Agent"="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36")
@@ -40,10 +53,10 @@ GetJD <- function(address){
   print("所有数据全部抓取完毕!!!")
   return(addinfo) 
 }
-myresult<-GetJD(jqname)
-failresult<-GetJD(testnames)
+myresult<-GetJD(sname$jqname)
+failresult<-GetJD(failnames)
 finalresult<-rbind(myresult,failresult)
-
+sresult<-GetJD(sname)
 #coordination transform
 myresult2<-myresult
 x_PI <- 3.14159265358979324 * 3000.0 / 180.0
@@ -64,7 +77,8 @@ correction$city<-sub('市',"",correction$city)
 correction$match<-correction$city==correction$City
 
 correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
-correctinfo<-correction[,c(-11)]
+
+sname<-jqinfo2$sname
 #add markers to amap
 p <- leaflet() %>%
   addTiles(
@@ -74,19 +88,19 @@ p <- leaflet() %>%
     group="Road Map"
   ) %>% 
   setView(118.788815,32.020729, zoom = 10)%>%
-  addMarkers(correctinfo,lng=as.numeric(correctinfo$lng),lat=as.numeric(correctinfo$lat),popup=correctinfo$Name)
+  addMarkers(finalresult,lng=as.numeric(finalresult$lng),lat=as.numeric(finalresult$lat),popup=finalresult$Name)
 p
 #format and output
-correctinfo$lng<-as.numeric(correctinfo$lng)
-correctinfo$lat<-as.numeric(correctinfo$lat)
-correctinfo<-as.data.frame(correctinfo)
-correctinfo$geo<-list()
-geo<-list(c(correctinfo$lng[10],correctinfo$lat[10]))
-class(geo[10])
-for(i in 1:length(correctinfo$citycode)){
-  geo[[i]]<-st_point(c(correctinfo$lng[i],correctinfo$lat[i]))
+finalresult$lng<-as.numeric(finalresult$lng)
+finalresult$lat<-as.numeric(finalresult$lat)
+finalresult<-as.data.frame(finalresult)
+finalresult$geo<-list()
+
+for(i in 1:length(finalresult$citycode)){
+  finalresult$geo[[i]]<-st_point(c(finalresult$lng[i],finalresult$lat[i]))
 }
-correctinfo$geo<-st_as_sfc(correctinfo$geo)
-st_crs(correctinfo)<-"+proj=longlat +datum=NAD27 +no_defs +ellps=clrk66 +nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat"
-geo<-st_as_sfc(geo)
-st_write(geo,"co.shp")
+finalresult$geo<-st_sfc(finalresult$geo,crs = 4326)
+
+finalresult<-st_sf(finalresult)
+finalresult
+st_write(finalresult,"co.shp")

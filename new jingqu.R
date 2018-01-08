@@ -7,15 +7,15 @@ library("magrittr")
 library("jsonlite")
 
 #data input
-<<<<<<< HEAD
+
 jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVT.csv",stringsAsFactors = FALSE)[,-1]
 jingqu<-st_read("F:/Administrator/Documents/R/Map/2011dian.shp",stringsAsFactors = FALSE)
-=======
+
 dirhome<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/'
 dirwork<-'F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/'
-jqdata<-read.csv(paste(dirhome,'JVT.csv',sep=''),stringsAsFactors = FALSE)[,-1]
+jqdata<-read.csv(paste(dirhome,'JVTnew.csv',sep=''),stringsAsFactors = FALSE)[,-1]
 jingqu<-st_read("C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/jingquwen.shp",stringsAsFactors = FALSE)
->>>>>>> 323287ed3bab14f7b9058d9d9c0f7aef33a06674
+
 
 #substract 
 jq2017<-jqdata[which(jqdata$Year==2017&jqdata$Month==10),]
@@ -74,7 +74,7 @@ GetJD <- function(address){
     'ak' = 'ahnETWIMdIcErB7vxPt7on8sDP8vydBi'
   )
 }
->>>>>>> 323287ed3bab14f7b9058d9d9c0f7aef33a06674
+
 
 #file format transformation and output
 jingqusp<-as(jingqu,"Spatial")
