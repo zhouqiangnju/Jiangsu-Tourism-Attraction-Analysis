@@ -7,13 +7,13 @@ library('reshape2')
 library("dplyr")
 library('plyr')
 library('sf')
-library('Rgctc')
+library('Rgctc2')
 library(maptools)
 library(rgdal)
 #data input
 homefile<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv'
 workfile<-"F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv"
-jqdata<-read.csv(homefile,stringsAsFactors = FALSE)[,-1]
+jqdata<-read.csv(workfile,stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
 
 testnames<-c('大丰知青纪念馆','无锡江苏学政文化旅游区')
@@ -79,10 +79,9 @@ correction$city<-sub('市',"",correction$city)
 correction$match<-correction$city==correction$City
 
 correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
-
-sname<-jqinfo2$sname
+jqgeo<-as.data.frame(jqgeo)
 #add markers to amap
-p <- leaflet() %>%
+jqgeo <- leaflet() %>%
   addTiles(
     'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
     options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
@@ -90,8 +89,30 @@ p <- leaflet() %>%
     group="Road Map"
   ) %>% 
   setView(118.788815,32.020729, zoom = 10)%>%
-  addMarkers(jqgeo,lng=as.numeric(jqgeo$lng),lat=as.numeric(jqgeo$lat),popup=jqgeo$Name)
-p
+  addMarkers(jqgeo,lng=jqgeo$lng,lat=jqgeo$lat,popup=jqgeo$Name)
+
+nj <- leaflet() %>%
+  addTiles(
+    'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+    options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
+    attribution = '&copy; <a href="http://ditu.amap.com/">高德地图</a>',
+    group="Road Map"
+  ) %>% 
+  setView(118.788815,32.020729, zoom = 10)%>%
+  addMarkers(nj,lng=nj$lng,lat=nj$lat,popup=nj$Name)
+nj
+nj<-jqgeo[which(jqgeo$city=='南京市'),]
+#test picture
+t <- leaflet() %>%
+  addTiles(
+    'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+    options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
+    attribution = '&copy; <a href="http://ditu.amap.com/">高德地图</a>',
+    group="Road Map"
+  ) %>% 
+  setView(118.788815,32.020729, zoom = 10)%>%
+  addMarkers(118.968617,32.469903)
+t
 #format and output
 
 
@@ -100,9 +121,12 @@ for(i in 1:length(jqgeo$citycode)){
 }
 
 jqgeo$geo<-st_sfc(jqgeo$geo,crs = 4326)
-jqgeo<-st_sf(jqgeo)
+jqgeo.sf<-st_sf(jqgeo)
 jqgeo$district<-as.character(jqgeo$district)
-jqgeo<-as(jqgeo,"Spatial")
+jqgeo.sp<-as(jqgeo,"Spatial")
 st_write(jqgeo,"coord.shp")
-writeOGR(jqgeo,'coord',driver="ESRI Shapefile")
-writeSpatialShape(jqgeo,"coord.shp")
+writeOGR(jqgeo.sp,'coord1',driver="ESRI Shapefile")
+writeSpatialShape(jqgeo.sp,"coord2.shp")
+coord2<-readShapeSpatial("coord2.shp")
+str(coord2)
+write.csv(jqgeo,'jqgeo.csv')
