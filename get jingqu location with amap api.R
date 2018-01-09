@@ -7,7 +7,7 @@ library('reshape2')
 library("dplyr")
 library('plyr')
 library('sf')
-library('Rgctc2')
+library('Rgctc')
 library(maptools)
 library(rgdal)
 #data input
@@ -52,6 +52,8 @@ myresult<-GetJD(jqname)
 failresult<-GetJD(testnames)
 jqgeo<-rbind(myresult,failresult)
 jqgeo$Name[c(230,231)]<-realname
+jqgeo$city<-as.factor(jqgeo$city)
+jqcity<-split(jqgeo,jqgeo$city)
 #coordination transform
 myresult2<-myresult
 x_PI <- 3.14159265358979324 * 3000.0 / 180.0
@@ -61,7 +63,7 @@ z<-sqrt(x^2+y^2)-0.00002*sin(y*x_PI)
 theta<-atan2(y,x)-0.000003 * cos(x * x_PI)
 myresult2$lng<-z*cos(theta)
 myresult2$lat<-z*sin(theta)
-
+jqcity[[1]]
 
 
 #coordination transform(GCJ02-WGS84)
@@ -76,7 +78,7 @@ jqchengshi<-jqchengshi[which(jqchengshi$Freq>0),][,-3]
 
 correction<-join(jqgeo,jqchengshi,by='Name')
 correction$city<-sub('市',"",correction$city)
-correction$match<-correction$city==correction$City
+correction$match<-correction$city==correction$city
 
 correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
 jqgeo<-as.data.frame(jqgeo)
@@ -90,8 +92,11 @@ jqgeo <- leaflet() %>%
   ) %>% 
   setView(118.788815,32.020729, zoom = 10)%>%
   addMarkers(jqgeo,lng=jqgeo$lng,lat=jqgeo$lat,popup=jqgeo$Name)
+#correction
+citymap<-list()
 
-nj <- leaflet() %>%
+add_jq_to_map<-function(x){
+  leaflet() %>%
   addTiles(
     'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
     options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
@@ -99,9 +104,10 @@ nj <- leaflet() %>%
     group="Road Map"
   ) %>% 
   setView(118.788815,32.020729, zoom = 10)%>%
-  addMarkers(nj,lng=nj$lng,lat=nj$lat,popup=nj$Name)
-nj
-nj<-jqgeo[which(jqgeo$city=='南京市'),]
+  addMarkers(x,lng=x$lng,lat=x$lat,popup=x$Name)
+  }
+citymap[[1]]<-add_jq_to_map(x)
+citymap[[1]]
 #test picture
 t <- leaflet() %>%
   addTiles(
@@ -130,3 +136,4 @@ writeSpatialShape(jqgeo.sp,"coord2.shp")
 coord2<-readShapeSpatial("coord2.shp")
 str(coord2)
 write.csv(jqgeo,'jqgeo.csv')
+jqgeo<-read.csv('jqgeo.csv',stringsAsFactors = FALSE)[,-1]
