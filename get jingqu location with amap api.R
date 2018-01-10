@@ -14,10 +14,9 @@ homefile<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis'
 workfile<-"F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis"
 cityorder<-c('NJ','WX','XZ','CZ','SZ','NT','LYG','HA','YC','YZ','ZJ','TZ','SQ')
 cityorder<-factor(cityorder,levels = cityorder)
-setwd(workfile)
+setwd(homefile)
 #data input
-jqdata<-read.csv(paste(workfile,'/JVTnew.csv',sep=''),stringsAsFactors = FALSE)[,-1]
-
+jqdata<-read.csv('JVTnew.csv',stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
 testnames<-c('大丰知青纪念馆','无锡江苏学政文化旅游区')
 realname<-c('大丰上海知青纪念馆','江阴江苏学政文化旅游区')
@@ -78,6 +77,9 @@ jqgeo$lat_wgs84<-gcj02_wgs84_lat(jqgeo$lng,jqgeo$lat)
 
 
 #correction
+update<-read.csv('update.csv',stringsAsFactors = FALSE)
+jqgeo$Name[match(update$Name,jqgeo$Name)]
+jqgeo[,c(7,8)][match(update$Name,jqgeo$Name),]<-update[,c(2,3)]
 jqinfo<-jqdata[,c(2,6)]
 jqchengshi<-as.data.frame(table(jqinfo))
 jqchengshi<-jqchengshi[which(jqchengshi$Freq>0),][,-3]
@@ -88,7 +90,7 @@ correction$match<-correction$city==correction$city
 
 correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
 jqgeo<-as.data.frame(jqgeo)
-#add markers to amap
+#map of js
 js_jq_map <- leaflet() %>%
   addTiles(
     'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
@@ -98,7 +100,7 @@ js_jq_map <- leaflet() %>%
   ) %>% 
   setView(118.788815,32.020729, zoom = 10)%>%
   addMarkers(jqgeo,lng=jqgeo$lng,lat=jqgeo$lat,popup=jqgeo$Name)
-#correction
+#map by city
 citymap<-list()
 length(citymap)<-13
 names(citymap)<-as.character(cityorder)
@@ -115,7 +117,7 @@ add_jq_to_map<-function(x){
   addMarkers(x,lng=x$lng,lat=x$lat,popup=x$Name)
   return(p)}
 citymap<-lapply(jqcity, add_jq_to_map)
-citymap$SQ
+citymap$SZ
 
 #test picture
 t <- leaflet() %>%
@@ -144,5 +146,5 @@ writeOGR(jqgeo.sp,'coord1',driver="ESRI Shapefile")
 writeSpatialShape(jqgeo.sp,"coord2.shp")
 coord2<-readShapeSpatial("coord2.shp")
 str(coord2)
-write.csv(jqgeo,'jqgeo.csv')
+write.csv(jqgeo,'jqgeo2.csv')
 
