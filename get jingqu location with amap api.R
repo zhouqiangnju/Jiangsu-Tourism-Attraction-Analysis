@@ -10,12 +10,15 @@ library('sf')
 library('Rgctc')
 library(maptools)
 library(rgdal)
+homefile<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis'
+workfile<-"F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis"
+cityorder<-c('NJ','WX','XZ','CZ','SZ','NT','LYG','HA','YC','YZ','ZJ','TZ','SQ')
+cityorder<-factor(cityorder,levels = cityorder)
+setwd(workfile)
 #data input
-homefile<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv'
-workfile<-"F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv"
-jqdata<-read.csv(workfile,stringsAsFactors = FALSE)[,-1]
-jqname<-as.character(unique(jqdata$Name))
+jqdata<-read.csv(paste(workfile,'/JVTnew.csv',sep=''),stringsAsFactors = FALSE)[,-1]
 
+jqname<-as.character(unique(jqdata$Name))
 testnames<-c('大丰知青纪念馆','无锡江苏学政文化旅游区')
 realname<-c('大丰上海知青纪念馆','江阴江苏学政文化旅游区')
 GetJD <- function(address){
@@ -52,9 +55,13 @@ myresult<-GetJD(jqname)
 failresult<-GetJD(testnames)
 jqgeo<-rbind(myresult,failresult)
 jqgeo$Name[c(230,231)]<-realname
-jqgeo$city<-as.factor(jqgeo$city)
+#read jq location file
+jqgeo<-read.csv('jqgeo.csv',stringsAsFactors = FALSE)[,-1]
+
+jqgeo$city<-factor(jqgeo$city,levels = cityorder)
 jqcity<-split(jqgeo,jqgeo$city)
-#coordination transform
+
+#coordination transform(BD09-GCJ02)
 myresult2<-myresult
 x_PI <- 3.14159265358979324 * 3000.0 / 180.0
 x<-myresult$lng-0.0065
@@ -63,7 +70,6 @@ z<-sqrt(x^2+y^2)-0.00002*sin(y*x_PI)
 theta<-atan2(y,x)-0.000003 * cos(x * x_PI)
 myresult2$lng<-z*cos(theta)
 myresult2$lat<-z*sin(theta)
-jqcity[[1]]
 
 
 #coordination transform(GCJ02-WGS84)
@@ -83,7 +89,7 @@ correction$match<-correction$city==correction$city
 correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
 jqgeo<-as.data.frame(jqgeo)
 #add markers to amap
-jqgeo <- leaflet() %>%
+js_jq_map <- leaflet() %>%
   addTiles(
     'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
     options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
@@ -94,20 +100,23 @@ jqgeo <- leaflet() %>%
   addMarkers(jqgeo,lng=jqgeo$lng,lat=jqgeo$lat,popup=jqgeo$Name)
 #correction
 citymap<-list()
+length(citymap)<-13
+names(citymap)<-as.character(cityorder)
 
 add_jq_to_map<-function(x){
-  leaflet() %>%
+  p<-leaflet() %>%
   addTiles(
     'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
     options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
     attribution = '&copy; <a href="http://ditu.amap.com/">高德地图</a>',
     group="Road Map"
   ) %>% 
-  setView(118.788815,32.020729, zoom = 10)%>%
+  setView(x$lng[1],x$lat[1], zoom = 10)%>%
   addMarkers(x,lng=x$lng,lat=x$lat,popup=x$Name)
-  }
-citymap[[1]]<-add_jq_to_map(x)
-citymap[[1]]
+  return(p)}
+citymap<-lapply(jqcity, add_jq_to_map)
+citymap$SQ
+
 #test picture
 t <- leaflet() %>%
   addTiles(
@@ -136,4 +145,4 @@ writeSpatialShape(jqgeo.sp,"coord2.shp")
 coord2<-readShapeSpatial("coord2.shp")
 str(coord2)
 write.csv(jqgeo,'jqgeo.csv')
-jqgeo<-read.csv('jqgeo.csv',stringsAsFactors = FALSE)[,-1]
+
