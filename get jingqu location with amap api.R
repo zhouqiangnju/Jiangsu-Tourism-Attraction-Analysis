@@ -7,7 +7,7 @@ library('reshape2')
 library("dplyr")
 library('plyr')
 library('sf')
-library('Rgctc')
+library('Rgctc2')
 library(maptools)
 library(rgdal)
 homefile<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis'
@@ -60,49 +60,18 @@ jqgeo<-read.csv('jqgeo.csv',stringsAsFactors = FALSE)[,-1]
 
 jqgeo$city<-factor(jqgeo$city,levels = cityorder)
 jqcity<-split(jqgeo,jqgeo$city)
-
-#coordination transform(BD09-GCJ02)
-myresult2<-myresult
-x_PI <- 3.14159265358979324 * 3000.0 / 180.0
-x<-myresult$lng-0.0065
-y<-myresult$lat-0.006
-z<-sqrt(x^2+y^2)-0.00002*sin(y*x_PI)
-theta<-atan2(y,x)-0.000003 * cos(x * x_PI)
-myresult2$lng<-z*cos(theta)
-myresult2$lat<-z*sin(theta)
-
-
 #coordination transform(GCJ02-WGS84)
 jqgeo$lng_wgs84<-gcj02_wgs84_lng(jqgeo$lng,jqgeo$lat)
 jqgeo$lat_wgs84<-gcj02_wgs84_lat(jqgeo$lng,jqgeo$lat)
-
-
 #correction
 jqinfo<-jqdata[,c(2,6)]
 jqchengshi<-as.data.frame(table(jqinfo))
 jqchengshi<-jqchengshi[which(jqchengshi$Freq>0),][,-3]
 
-correction<-join(jqgeo,jqchengshi,by='Name')
-correction$city<-sub('市',"",correction$city)
-correction$match<-correction$city==correction$city
-
-correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
-jqgeo<-as.data.frame(jqgeo)
+update<-read.csv('updata location.csv')
+jqgeo$Name[match(update$Name,jqgeo$Name)]
+jqgeo[,c(7,8)][match(update$Name,jqgeo$Name),]<-update[,c(2,3)]
 #add markers to amap
-js_jq_map <- leaflet() %>%
-  addTiles(
-    'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
-    options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
-    attribution = '&copy; <a href="http://ditu.amap.com/">高德地图</a>',
-    group="Road Map"
-  ) %>% 
-  setView(118.788815,32.020729, zoom = 10)%>%
-  addMarkers(jqgeo,lng=jqgeo$lng,lat=jqgeo$lat,popup=jqgeo$Name)
-#correction
-citymap<-list()
-length(citymap)<-13
-names(citymap)<-as.character(cityorder)
-
 add_jq_to_map<-function(x){
   p<-leaflet() %>%
   addTiles(
@@ -114,27 +83,17 @@ add_jq_to_map<-function(x){
   setView(x$lng[1],x$lat[1], zoom = 10)%>%
   addMarkers(x,lng=x$lng,lat=x$lat,popup=x$Name)
   return(p)}
+js_jq_map<-add_jq_to_map(jqgeo)
+js_jq_map
+
 citymap<-lapply(jqcity, add_jq_to_map)
-citymap$SQ
+citymap$YC
 
-#test picture
-t <- leaflet() %>%
-  addTiles(
-    'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
-    options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
-    attribution = '&copy; <a href="http://ditu.amap.com/">高德地图</a>',
-    group="Road Map"
-  ) %>% 
-  setView(118.788815,32.020729, zoom = 10)%>%
-  addMarkers(118.968617,32.469903)
-t
 #format and output
-
-
 for(i in 1:length(jqgeo$citycode)){
   jqgeo$geo[[i]]<-st_point(c(jqgeo$lng[i],jqgeo$lat[i]))
 }
-
+#output
 jqgeo$geo<-st_sfc(jqgeo$geo,crs = 4326)
 jqgeo.sf<-st_sf(jqgeo)
 jqgeo$district<-as.character(jqgeo$district)
