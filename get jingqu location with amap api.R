@@ -52,7 +52,8 @@ GetJD <- function(address){
 }
 
 myresult<-GetJD(jqname)
-failresult<-GetJD(testnames)
+failresult<-GetJD("南京市宝船厂遗址景区")
+jqlist[2]
 jqgeo<-rbind(myresult,failresult)
 jqgeo$Name[c(230,231)]<-realname
 #read jq location file
@@ -71,12 +72,7 @@ jqinfo<-jqdata[,c(2,6)]
 jqchengshi<-as.data.frame(table(jqinfo))
 jqchengshi<-jqchengshi[which(jqchengshi$Freq>0),][,-3]
 
-<<<<<<< HEAD
-correction<-join(jqgeo,jqchengshi,by='Name')
-correction$city<-sub('市',"",correction$city)
-correction$match<-correction$city==correction$city
 
-correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
 jqgeo<-as.data.frame(jqgeo)
 #map of js
 js_jq_map <- leaflet() %>%
@@ -93,12 +89,12 @@ citymap<-list()
 length(citymap)<-13
 names(citymap)<-as.character(cityorder)
 
-=======
+
 update<-read.csv('updata location.csv')
 jqgeo$Name[match(update$Name,jqgeo$Name)]
 jqgeo[,c(7,8)][match(update$Name,jqgeo$Name),]<-update[,c(2,3)]
 #add markers to amap
->>>>>>> 2f523e284a08cf1d2e0b89360bb48f7cb126e8ae
+
 add_jq_to_map<-function(x){
   p<-leaflet() %>%
   addTiles(
@@ -114,11 +110,7 @@ js_jq_map<-add_jq_to_map(jqgeo)
 js_jq_map
 
 citymap<-lapply(jqcity, add_jq_to_map)
-<<<<<<< HEAD
-citymap$SZ
-=======
-citymap$YC
->>>>>>> 2f523e284a08cf1d2e0b89360bb48f7cb126e8ae
+
 
 #format and output
 for(i in 1:length(jqgeo$citycode)){
