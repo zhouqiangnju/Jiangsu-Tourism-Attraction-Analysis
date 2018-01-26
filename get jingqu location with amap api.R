@@ -15,7 +15,7 @@ homefile<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis'
 workfile<-"F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis"
 cityorder<-c('NJ','WX','XZ','CZ','SZ','NT','LYG','HA','YC','YZ','ZJ','TZ','SQ')
 cityorder<-factor(cityorder,levels = cityorder)
-setwd(homefile)
+setwd(workfile)
 #data input
 jqdata<-read.csv('JVTnew.csv',stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
@@ -56,7 +56,7 @@ failresult<-GetJD(testnames)
 jqgeo<-rbind(myresult,failresult)
 jqgeo$Name[c(230,231)]<-realname
 #read jq location file
-jqgeo<-read.csv('jqgeo.csv',stringsAsFactors = FALSE)[,-1]
+jqgeo<-read.csv('jqgeonew.csv',stringsAsFactors = FALSE)[,-1]
 
 jqgeo$city<-factor(jqgeo$city,levels = cityorder)
 jqcity<-split(jqgeo,jqgeo$city)
@@ -64,20 +64,8 @@ jqcity<-split(jqgeo,jqgeo$city)
 jqgeo$lng_wgs84<-gcj02_wgs84_lng(jqgeo$lng,jqgeo$lat)
 jqgeo$lat_wgs84<-gcj02_wgs84_lat(jqgeo$lng,jqgeo$lat)
 #correction
-update<-read.csv('update.csv',stringsAsFactors = FALSE)
-jqgeo$Name[match(update$Name,jqgeo$Name)]
-jqgeo[,c(7,8)][match(update$Name,jqgeo$Name),]<-update[,c(2,3)]
-jqinfo<-jqdata[,c(2,6)]
-jqchengshi<-as.data.frame(table(jqinfo))
-jqchengshi<-jqchengshi[which(jqchengshi$Freq>0),][,-3]
 
-<<<<<<< HEAD
-correction<-join(jqgeo,jqchengshi,by='Name')
-correction$city<-sub('ÊÐ',"",correction$city)
-correction$match<-correction$city==correction$city
 
-correction[which(correction$match=='FALSE'),c('lng','lat')][1,]<-c('118.9743','33.808995')
-jqgeo<-as.data.frame(jqgeo)
 #map of js
 js_jq_map <- leaflet() %>%
   addTiles(
@@ -93,12 +81,6 @@ citymap<-list()
 length(citymap)<-13
 names(citymap)<-as.character(cityorder)
 
-=======
-update<-read.csv('updata location.csv')
-jqgeo$Name[match(update$Name,jqgeo$Name)]
-jqgeo[,c(7,8)][match(update$Name,jqgeo$Name),]<-update[,c(2,3)]
-#add markers to amap
->>>>>>> 2f523e284a08cf1d2e0b89360bb48f7cb126e8ae
 add_jq_to_map<-function(x){
   p<-leaflet() %>%
   addTiles(
@@ -114,11 +96,7 @@ js_jq_map<-add_jq_to_map(jqgeo)
 js_jq_map
 
 citymap<-lapply(jqcity, add_jq_to_map)
-<<<<<<< HEAD
-citymap$SZ
-=======
-citymap$YC
->>>>>>> 2f523e284a08cf1d2e0b89360bb48f7cb126e8ae
+
 
 #format and output
 for(i in 1:length(jqgeo$citycode)){
