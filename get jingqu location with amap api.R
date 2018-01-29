@@ -15,7 +15,7 @@ homefile<-'C:/Users/zhouq/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis'
 workfile<-"F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis"
 cityorder<-c('NJ','WX','XZ','CZ','SZ','NT','LYG','HA','YC','YZ','ZJ','TZ','SQ')
 cityorder<-factor(cityorder,levels = cityorder)
-setwd(homefile)
+setwd(workfile)
 #data input
 jqdata<-read.csv('JVTnew.csv',stringsAsFactors = FALSE)[,-1]
 jqname<-as.character(unique(jqdata$Name))
@@ -52,12 +52,11 @@ GetJD <- function(address){
 }
 
 myresult<-GetJD(jqname)
-failresult<-GetJD("南京市宝船厂遗址景区")
-jqlist[2]
+failresult<-GetJD(testnames)
 jqgeo<-rbind(myresult,failresult)
 jqgeo$Name[c(230,231)]<-realname
 #read jq location file
-jqgeo<-read.csv('jqgeo.csv',stringsAsFactors = FALSE)[,-1]
+jqgeo<-read.csv('jqgeonew.csv',stringsAsFactors = FALSE)[,-1]
 
 jqgeo$city<-factor(jqgeo$city,levels = cityorder)
 jqcity<-split(jqgeo,jqgeo$city)
@@ -65,15 +64,8 @@ jqcity<-split(jqgeo,jqgeo$city)
 jqgeo$lng_wgs84<-gcj02_wgs84_lng(jqgeo$lng,jqgeo$lat)
 jqgeo$lat_wgs84<-gcj02_wgs84_lat(jqgeo$lng,jqgeo$lat)
 #correction
-update<-read.csv('update.csv',stringsAsFactors = FALSE)
-jqgeo$Name[match(update$Name,jqgeo$Name)]
-jqgeo[,c(7,8)][match(update$Name,jqgeo$Name),]<-update[,c(2,3)]
-jqinfo<-jqdata[,c(2,6)]
-jqchengshi<-as.data.frame(table(jqinfo))
-jqchengshi<-jqchengshi[which(jqchengshi$Freq>0),][,-3]
 
 
-jqgeo<-as.data.frame(jqgeo)
 #map of js
 js_jq_map <- leaflet() %>%
   addTiles(
@@ -88,12 +80,6 @@ js_jq_map <- leaflet() %>%
 citymap<-list()
 length(citymap)<-13
 names(citymap)<-as.character(cityorder)
-
-
-update<-read.csv('updata location.csv')
-jqgeo$Name[match(update$Name,jqgeo$Name)]
-jqgeo[,c(7,8)][match(update$Name,jqgeo$Name),]<-update[,c(2,3)]
-#add markers to amap
 
 add_jq_to_map<-function(x){
   p<-leaflet() %>%
