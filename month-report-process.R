@@ -1,11 +1,11 @@
+library(dplyr)
 monthreport<-function(month){
   library(readxl)
   library(dplyr)
 
-  
   #自动生成日期
-  year<-gsub("\\D","",month)%>%substr(1,4)
-  yue<-gsub("\\D","",month)%>%substr(5,6)
+  year<-gsub("\\D","",month) %>% substr(1,4)
+  yue<-gsub("\\D","",month) %>% substr(5,6)
   date<-paste(year,yue,"15",sep="-")
   #read data from excel files 
   monthdata<-read_xls(month,sheet="4A1",range="A3:C3")
@@ -119,15 +119,14 @@ monthreport<-function(month){
   
   #output
   write.csv(monthdata,paste(date,".csv",sep=""))
-  monthdata
+  return(date)
 }
 
-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2017年11月(小册子)（印刷）（简易）.xls")
-month201711<-read.csv("F:/Administrator/Documents/R/2017-11-15.csv",stringsAsFactors = FALSE)
 #merge
-jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Jiangsu Tourist Attractions/JQ1212.csv",stringsAsFactors = FALSE)[,-1]
-jqdata$Year<-substr(jqdata$Month,1,4)
-jqdata$Date<-as.Date(jqdata$Month)
-jqdata$Month<-substr(jqdata$Date,6,7)
-jqdata<-rbind(jqdata,month201711)
-write.csv(jqdata,"F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jingqu Vistordata in Time-series.csv")
+date<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2017年12月5A、4A景区接待情况.xls")
+month201712<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2017年12月5A、4A景区接待情况.xls")%>%paste('.csv',sep='')%>%read.csv()
+jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv",stringsAsFactors = FALSE)[,-1]
+
+jqdata<-rbind(jqdata,month201712)
+write.csv(jqdata,paste("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(",date,').csv',sep = ''))
+paste("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(",date,')',sep = '')
