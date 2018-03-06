@@ -1,27 +1,30 @@
-library(dplyr)
+
 monthreport<-function(month){
-  library(readxl)
+  
   library(dplyr)
+  library(readxl)
 
   #自动生成日期
   year<-gsub("\\D","",month) %>% substr(1,4)
-  yue<-gsub("\\D","",month) %>% substr(5,6)
-  date<-paste(year,yue,"15",sep="-")
+  yue<-gsub("\\D","",month) %>% substr(5,6)%>% as.integer()
+  if(yue>12) yue<-floor(yue/10)
+  
   #read data from excel files 
-  monthdata<-read_xls(month,sheet="4A1",range="A3:C3")
+  monthdata<-read_xls(month,sheet="4A1",range="A3:B3")
+
   sheet<-excel_sheets(month)
   sheet4A<-grep("4A",sheet)
-  n<-length(sheet4A)
-  for(j in 1:n){
+  
+  for(j in 1:length(sheet4A)){
     newdata<-read_xls(month,sheet=sheet4A[j],range=cell_cols("A:B"),col_names=FALSE)
     newdata<-newdata[-c(1:4),]
-    newdata$Date<-date
     monthdata<-rbind(monthdata,newdata)
   }
   #clean and restore data
-  names(monthdata)<-c("Name","Visitor","Date")
+  names(monthdata)<-c("Name","Visitor")
+  monthdata$Name<-sub("合//s*计","全省",monthdata$Name)
   monthdata<-monthdata[!is.na(monthdata$Name),]
-  monthdata<-monthdata[c(-1),]
+  monthdata<-monthdata[-1,]
   
   #Rate
   monthdata$Rate<-"4A"
@@ -29,7 +32,6 @@ monthreport<-function(month){
   monthdata$Name<-sub(".5A.$","",monthdata$Name)
   #City
   monthdata$City<-substr(monthdata$Name,1,2)
-  monthdata$Name<-sub("合//s*计","全省",monthdata$Name)
   monthdata$City<-sub("侵华","南京",monthdata$City)
   monthdata$City<-sub("宜兴|江阴","无锡",monthdata$City)
   monthdata$City<-sub("新沂|邳州|沛县|睢宁","徐州",monthdata$City)
@@ -47,7 +49,7 @@ monthreport<-function(month){
   monthdata$City[grep("江苏茶博园",monthdata$Name)]<-"镇江"
   monthdata$City[grep("中国泗阳杨树博物馆",monthdata$Name)]<-"宿迁"
   monthdata$City[grep("中国东海水晶博物馆",monthdata$Name)]<-"连云港"
-  monthdata$chengshi<-"JS"
+  monthdata$chengshi<-'JS'
   monthdata$chengshi[grep("南京",monthdata$City)]<-"NJ"
   monthdata$chengshi[grep("无锡",monthdata$City)]<-"WX"
   monthdata$chengshi[grep("徐州",monthdata$City)]<-"XZ"
@@ -62,11 +64,11 @@ monthreport<-function(month){
   monthdata$chengshi[grep("泰州",monthdata$City)]<-"TZ"
   monthdata$chengshi[grep("宿迁",monthdata$City)]<-"SQ"
   #Month
-  monthdata$Date<-as.Date(monthdata$Date)
+
   monthdata$Year<-year
   monthdata$Month<-yue
-  monthdata<-monthdata[order(monthdata$Month),]
-  monthdata$NOTE<-""
+  
+
   #景区名称归一化
   monthdata$Name[grep("中山陵",monthdata$Name)]<-"南京中山陵园风景区"
   monthdata$Name[grep("团氿",monthdata$Name)]<-"宜兴团氿风景区"
@@ -96,7 +98,7 @@ monthreport<-function(month){
   monthdata$Name[grep("凤城河",monthdata$Name)]<-"泰州凤城河风景区"
   monthdata$Name[grep("濠河",monthdata$Name)]<-"南通濠河旅游区"
   monthdata$Name[grep("狼山",monthdata$Name)]<-"南通狼山旅游区"
-  monthdata$Name[grep("苏州虎丘",monthdata$Name,fixed = TRUE)]<-"苏州虎丘风景名胜区"
+  monthdata$Name[grep("苏州虎丘",monthdata$Name)]<-"苏州虎丘风景名胜区"
   monthdata$Name[grep("天目湖旅游",monthdata$Name)]<-"常州天目湖旅游区"
   monthdata$Name[grep("吴承恩",monthdata$Name)]<-"淮安吴承恩故居景区"
   monthdata$Name[grep("国际水晶",monthdata$Name)]<-"连云港市东海县国际水晶珠宝城"
@@ -118,15 +120,16 @@ monthreport<-function(month){
   
   
   #output
-  write.csv(monthdata,paste(date,".csv",sep=""))
-  return(date)
+  filepath<-paste('F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/',year,'年',yue,'月',"(processed).csv",sep="")
+  write.csv(monthdata,filepath)
+  return(filepath)
 }
 
 #merge
-date<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2017年12月5A、4A景区接待情况.xls")
-month201712<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2017年12月5A、4A景区接待情况.xls")%>%paste('.csv',sep='')%>%read.csv()
-jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTnew.csv",stringsAsFactors = FALSE)[,-1]
 
-jqdata<-rbind(jqdata,month201712)
-write.csv(jqdata,paste("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(",date,').csv',sep = ''))
-paste("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(",date,')',sep = '')
+newdata<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2018年1月5A、4A景区接待情况.xls")%>%read.csv(stringsAsFactors = FALSE)
+jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTupdate.csv",stringsAsFactors = FALSE)[,-1]
+
+jqdatanew<-rbind(jqdata,newdata)
+write.csv(jqdatanew,paste("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(",Sys.Date(),').csv',sep = ''))
+
