@@ -39,7 +39,7 @@ monthreport<-function(month){
   monthdata$City<-sub("吴江|太仓|张家|常熟|昆山|虞山","苏州",monthdata$City)
   monthdata$City<-sub("如皋|海门|海安","南通",monthdata$City)
   monthdata$City<-sub("连云|东海|灌云|灌南","连云港",monthdata$City)
-  monthdata$City<-sub("盱眙|涟水|新四","淮安",monthdata$City)
+  monthdata$City<-sub("盱眙|涟水|新四|金湖","淮安",monthdata$City)
   monthdata$City<-sub("大丰|阜宁|射阳|东台","盐城",monthdata$City)
   monthdata$City<-sub("高邮","扬州",monthdata$City)
   monthdata$City<-sub("姜堰|兴化","泰州",monthdata$City)
@@ -117,6 +117,7 @@ monthreport<-function(month){
   monthdata$Name[grep("宜兴市竹海景区",monthdata$Name)]<-"宜兴竹海景区"
   monthdata$Name[grep("镇江市焦山风景区",monthdata$Name)]<-"镇江焦山风景区"
   monthdata$Name[grep("镇江市北固山风景区",monthdata$Name)]<-"镇江北固山风景区"
+  monthdata$Name[grep("道天下",monthdata$Name)]<-"常州东方盐湖城·道天下景区"
   
   
   #output
