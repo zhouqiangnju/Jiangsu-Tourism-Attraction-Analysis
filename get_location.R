@@ -13,16 +13,17 @@ library('Rgctc2',lib.loc='~/GitHub/R_coordination_transformation')
 library(maptools)
 library('rgdal')
 library(stringr)
+library(leaflet)
 
 jqinfo<-read.xlsx('F:/Administrator/Documents/R/Jiangsu Tourist Attractions/½­ËÕÊ¡A¼¶ÂÃÓÎ¾°ÇøÃûÂ¼(½ØÖÁ2017Äê12ÔÂ31ÈÕ£©.xlsx')
 names(jqinfo)<-c('No.','Rate','City','Name','URL')
-jq_3A<-filter(jqinfo,Rate!='4A',Rate!='5A') %>% select(-URL)
+jq3A<-filter(jqinfo,Rate!='4A',Rate!='5A') %>% select(-URL)
 null_table<-data.frame('formatted_address'=0,'city'=0,'district'=0,'location'=0,'level'=0,'wgs84_lng'=0,'wgs84_lat'=0)
-get_location <- function(address){
+get_location <- function(address,city){
   key<-'7c6b6c0d1b641f4aa9cdb7d2229ae728'
   adcode<-320000
   api<-str_glue(
-    'http://restapi.amap.com/v3/geocode/geo?address={address}&output=json&key={key}&city={adcode}')
+    'http://restapi.amap.com/v3/geocode/geo?address={address}&output=json&key={key}&city={city}')
   
     info <-GET(api) %>% content(as='text',encoding = 'UTF-8') %>% fromJSON(flatten=TRUE)
     if(info$count!='0'){
@@ -31,7 +32,7 @@ get_location <- function(address){
     info<-mutate(info,wgs84_lng=center[1],wgs84_lat=center[2],name=address)
     }
     else{
-    info<-mutate(null_table,name=address)
+    info<-mutate(null_table,name=address,city=city)
     }
   
   return(info)   
@@ -40,14 +41,31 @@ get_location <- function(address){
  
 setwd('F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis')
 write.csv(jq_3A,'jq3a.csv')
-jq_3A<-read.csv('jq3a.csv',stringsAsFactors = FALSE)
-test<-c(jq_3A$Name[1:2])
-jq_3A$Name[grep('Ç®ÄÂ',jq_3A$Name)]<-'Ç®ÄÂÇ®Î°³¤¹Ê¾Ó'
-search_name<-jq_3A$Name %>% unique
-vacum<-list()
-for(i in 1:length(search_name))
-vacum[[i]]<-get_location(search_name[i])  
+jq3A<-read.csv('jq3a.csv',stringsAsFactors = FALSE)
 
+jq3A$Name[grep('Ç®ÄÂ',jq_3A$Name)]<-'Ç®ÄÂÇ®Î°³¤¹Ê¾Ó'
+jq3A$Name<-jq3A$Name %>% str_trim 
+vacum<-list()
+for(i in 1:length(search_name)) {vacum[[i]]<-get_location(jq3A$Name[i],jq3A$City[i])  }
+center<-table$location %>% str_split(',')  %>% lapply(sapply,as.numeric) %>% list.rbind
+class(center[,1])
+table<- list.rbind(vacum)
+table<-mutate(table,amap_lng=center[,1],amap_lat=center[,2])
+
+add_jq_to_map<-function(x){
+  p<-leaflet() %>%
+    addTiles(
+      'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+      options=tileOptions(tileSize=256, minZoom=9, maxZoom=17, subdomains="1234"),
+      attribution = '&copy; <a href="http://ditu.amap.com/">¸ßµÂµØÍ¼</a>',
+      group="Road Map"
+    ) %>% 
+    setView(x$amap_lng[1],x$amap_lat[1], zoom = 10)%>%
+    addMarkers(x,lng=x$amap_lng,lat=x$amap_lat,popup=x$name)
+  return(p)}
+t<-add_jq_to_map(table)
+t
+class(table$amap_lng)
 t<-'´ó·áµ¤¶¥º×ÕäÇÝÔ°¾°Çø' %>% get_location
 search_name<-unique(jq_3A$Name)
 Name<-sample(Name,100)
@@ -55,3 +73,4 @@ table<-lapply(Name,get_location)
 table_table<-list.rbind(table)
 jqlist<-as.character(unique(jq_3A$Name))
 test<-'xjsdl'
+write.csv(table,'geo3a.csv')
