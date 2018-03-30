@@ -1,8 +1,12 @@
-x_PI <- 3.14159265358979324 * 3000.0 / 180.0
-PI<-3.1415926535897932384626;
-a<-6378245.0;
-ee<-0.00669342162296594323;
 
+gcj02_wgs84_matrix<-function(x){
+  x_PI <- 3.14159265358979324 * 3000.0 / 180.0
+  PI<-3.1415926535897932384626;
+  a<-6378245.0;
+  ee<-0.00669342162296594323;
+
+  lng<-x[,1]
+  lat<-x[,2]
 
 transformlat<-function(lng, lat) {
   ret <- -100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat + 0.2 * sqrt(abs(lng));
@@ -48,3 +52,8 @@ gcj02_wgs84_lat<-function(lng, lat) {
   return(lat * 2 - mglat)
 }
 
+wgs84_lng<-gcj02_wgs84_lng(lng,lat)
+wgs84_lat<-gcj02_wgs84_lat(lng,lat)
+y<-apply(data.frame(wgs84_lng,wgs84_lat),1,list)
+return(y)
+}

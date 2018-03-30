@@ -71,8 +71,8 @@ monthreport<-function(month){
 
   #景区名称归一化
   monthdata$Name[grep("中山陵",monthdata$Name)]<-"南京中山陵园风景区"
-  monthdata$Name[grep("团氿",monthdata$Name)]<-"宜兴团氿风景区"
-  monthdata$Name[grep("恐龙",monthdata$Name)]<-"常州中华恐龙园"
+  monthdata$Name[grep("团氿",monthdata$Name)]<-"宜兴团氿景区"
+  monthdata$Name[grep("恐龙",monthdata$Name)]<-"常州环球恐龙城"
   monthdata$Name[grep("西津",monthdata$Name)]<-"镇江西津渡历史文化街区"
   monthdata$Name[grep("瘦西湖",monthdata$Name)]<-"扬州瘦西湖风景区"
   monthdata$Name[grep("东关",monthdata$Name)]<-"扬州东关历史文化旅游区"
@@ -127,9 +127,9 @@ monthreport<-function(month){
 }
 
 #merge
-
-newdata<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2018年1月5A、4A景区接待情况.xls")%>%read.csv(stringsAsFactors = FALSE)
-jqdata<-read.csv("F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/JVTupdate.csv",stringsAsFactors = FALSE)[,-1]
+library('dplyr')
+newdata<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2018年2月5A、4A景区接待情况.xls")%>%read.csv(stringsAsFactors = FALSE)
+jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(2018-03-06).csv",stringsAsFactors = FALSE)[,-1]
 
 jqdatanew<-rbind(jqdata,newdata)
 write.csv(jqdatanew,paste("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(",Sys.Date(),').csv',sep = ''))

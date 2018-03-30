@@ -17,7 +17,7 @@ jq_3a$Year<-substr(jq_3a$Date,1,4)
 jq_3a$Name<-sub('江苏省','',jq_3a$Name)
 write.csv(jq_3a,'jingqu3A.csv')
 jq_3A<-read.csv('jingqu3A.csv')[,-1]
-jqlist<-as.character(unique(jq_3A$Name))
+jqlist<-
 #GetJD函数在直接读取excel中文编码时会出错，需先写成csv文件后读取
 GetJD <- function(address){
   url = "http://restapi.amap.com/v3/geocode/geo"
