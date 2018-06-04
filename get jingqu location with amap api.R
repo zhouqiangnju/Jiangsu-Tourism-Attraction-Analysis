@@ -113,4 +113,4 @@ writeSpatialShape(jqgeo.sp,"coord2.shp")
 coord2<-readShapeSpatial("coord2.shp")
 str(coord2)
 write.csv(jqgeo,'jqgeo2.csv')
-
+coord2<-st_read('F:/Administrator/Documents/GitHub/Jiangsu-Tourism-Attraction-Analysis/coord2.shp')
