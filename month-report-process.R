@@ -128,7 +128,8 @@ monthreport<-function(month){
 
 #merge
 library('dplyr')
-newdata<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2018年2月5A、4A景区接待情况.xls")%>%read.csv(stringsAsFactors = FALSE)
+setwd('F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW')
+newdata<-monthreport("2018年4月(小册子)（印刷）.xls")%>%read.csv(stringsAsFactors = FALSE)
 jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(2018-03-06).csv",stringsAsFactors = FALSE)[,-1]
 
 jqdatanew<-rbind(jqdata,newdata)
