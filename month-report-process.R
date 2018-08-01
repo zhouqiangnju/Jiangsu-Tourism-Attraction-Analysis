@@ -1,6 +1,8 @@
 
+library('tidyverse')
+
 monthreport<-function(month){
-  
+  month = 'F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2018年6月(小册子)（印刷）.xls'
   library(dplyr)
   library(readxl)
 
@@ -11,6 +13,7 @@ monthreport<-function(month){
   
   #read data from excel files 
   monthdata<-read_xls(month,sheet="4A1",range="A3:B3")
+  files=list.files('F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW',full.names = T)
 
   sheet<-excel_sheets(month)
   sheet4A<-grep("4A",sheet)
@@ -128,8 +131,9 @@ monthreport<-function(month){
 
 #merge
 library('dplyr')
-setwd('F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW')
-newdata<-monthreport("2018年4月(小册子)（印刷）.xls")%>%read.csv(stringsAsFactors = FALSE)
+
+setwd('~/R/Jiangsu Tourist Attractions/RAW')
+newdata<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2018年6月(小册子)（印刷）.xls")%>%read.csv(stringsAsFactors = FALSE)
 jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(2018-03-06).csv",stringsAsFactors = FALSE)[,-1]
 
 jqdatanew<-rbind(jqdata,newdata)
