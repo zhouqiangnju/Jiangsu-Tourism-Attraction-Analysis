@@ -1,23 +1,24 @@
 library(pacman)
-p_load('sf',"tidyverse",'tmap','rgdal','maptools','raster')
+p_load('sf',"tidyverse",'tmap','rgdal','maptools','raster','showtext')
 
-st_crs(4498)
+cgcs2000_geo=st_crs(4490)
+cgcs2000_proj_lon0117 =st_crs(4498)
+crs=make_EPSG()
 #import data
 getwd()
-nj_jq_poly = st_read('F:/Administrator/Documents/Tencent Files/10323671/FileRecv/南京市高等级旅游景区(1).kml')%>%st_transform(4498)
-nj_jq_poly_buffer = st_buffer(nj_jq_poly,dist=200)
-tm_shape(nj_jq_poly_buffer)+tm_polygons()
-jqgeo_4326<-readRDS('js_jq(4A+).rds')
-jqgeo<-st_transform(jqgeo_4326,crs=4498)
+js_jq_poly =readRDS('F:/Administrator/Documents/Map/旅游数据/boundry_of_js_highrate_jq/boundry_of_js_highrate_jq/jq_poly_0810.rds')
+nj_jq_poly=filter(js_jq_poly,grepl('南京',Name)) %>% st_transform(cgcs2000_proj_lon0117)
 
-saveRDS(jqgeo_4326,'js_jq(4A+).rds')
-nj_poi<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_poi_2018_modify.rds')%>% 
-  st_transform(4498)
-nj_town<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_town_sf.rds')%>% 
-  st_transform(4498)
+
+
+
+
+nj_poi<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_poi_2018_modify.rds')%>% st_transform(4498)
+
+nj_town<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_town_sf.rds')
 nj_frame<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_district_sf.rds')%>% st_transform(4498)
 
-jq_poi= nj_poi[nj_jq_poly,]
+
 nj_jq_poly=select(nj_jq_poly,-Description)
 nj_jq_poly$area = st_area(nj_jq_poly)
 jq_poi_info = st_join(jq_poi,nj_jq_poly)
@@ -27,6 +28,24 @@ poi_buffer_n = buffer_poi %>% group_by(Name)%>% tally()
 tm_shape(jq_poi)+tm_dots()
 poi_buffer_n
 #get nj jq buffer
+jq_poi= nj_poi[nj_jq_poly,]
+jq_poi_info = st_join(jq_poi,nj_jq_poly)
+summary=group_by(jq_poi_info,Name)%>% tally()
+dist=1:5*100
+
+for (i in 1:5)
+{nj_jq_poly_buffer[[i]]=st_buffer(nj_jq_poly,dist=buff_dist[i])
+}
+
+x=st_difference(buffer_100,nj_jq_poly)
+plot(x$geo)
+buffer_500 =nj_jq_poly_buffer[[5]]
+buffer_collect=list(buffer_100,buffer_200,buffer_300,buffer_400,buffer_500)
+buffer_poi=list()
+for(i in 1:5)
+buffer_poi[[i]]=nj_poi[buffer_collect[[i]],] %>% st_join(buffer_collect[[i]])
+
+
 nj_jq<-jqgeo%>% filter(city=='NJ') %>% 
        dplyr::select('district','Name','keyword','height','Rate')
 nj_jq_buffer<-st_buffer(nj_jq,dist=1000)
