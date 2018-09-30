@@ -13,7 +13,7 @@ monthreport<-function(month){
   
   #read data from excel files 
   monthdata<-read_xls(month,sheet="4A1",range="A3:B3")
-  files=list.files('F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW',full.names = T)
+  
 
   sheet<-excel_sheets(month)
   sheet4A<-grep("4A",sheet)
@@ -133,9 +133,11 @@ monthreport<-function(month){
 library('dplyr')
 
 setwd('~/R/Jiangsu Tourist Attractions/RAW')
-newdata<-monthreport("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/RAW/2018年1月5A、4A景区接待情况.xls")%>%read.csv(stringsAsFactors = FALSE)
-jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(2018-03-06).csv",stringsAsFactors = FALSE)[,-1]
+path=getwd()
+file=list.files(path)
 
-jqdatanew<-rbind(jqdata,newdata)
+newdata<-monthreport(file[50])%>%read.csv(stringsAsFactors = FALSE)
+jqdata<-read.csv("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/JVT201802.csv",stringsAsFactors = FALSE)[,-1]
+
 write.csv(jqdatanew,paste("F:/Administrator/Documents/R/Jiangsu Tourist Attractions/Data/Jiangsu_Jingqu_Vistordata_in_Time-series(",Sys.Date(),').csv',sep = ''))
 

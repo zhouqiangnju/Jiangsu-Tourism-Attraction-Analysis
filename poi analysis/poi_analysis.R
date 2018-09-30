@@ -1,19 +1,16 @@
 library(pacman)
-p_load('sf',"tidyverse",'tmap','rgdal','maptools','raster','showtext')
+p_load('sf',"tidyverse",'rgdal','maptools','raster','showtext')
 
-cgcs2000_geo=st_crs(4490)
-cgcs2000_proj_lon0117 =st_crs(4498)
-crs=make_EPSG()
+library('tmap')
+
 #import data
 getwd()
 js_jq_poly =readRDS('F:/Administrator/Documents/Map/旅游数据/boundry_of_js_highrate_jq/boundry_of_js_highrate_jq/jq_poly_0810.rds')
-nj_jq_poly=filter(js_jq_poly,grepl('南京',Name)) %>% st_transform(cgcs2000_proj_lon0117)
+nj_jq_poly=filter(js_jq_poly,grepl('南京',Name)) %>% st_transform(4498)
+nj_jq=unclass(nj_jq_poly) %>% as.data.frame() %>%dplyr::select(Name,Rate)
 
 
-
-
-
-nj_poi<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_poi_2018_modify.rds')%>% st_transform(4498)
+nj_poi<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_poi_2018_modify.rds')%>% st_transform(4498) %>% dplyr::select(-c(地址,市,WGS84_经度,WGS84_纬度))
 
 nj_town<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_town_sf.rds')
 nj_frame<-readRDS('~/GitHub/Jiangsu-Tourism-Attraction-Analysis/poi analysis/nj_district_sf.rds')%>% st_transform(4498)
@@ -31,29 +28,47 @@ poi_buffer_n
 jq_poi= nj_poi[nj_jq_poly,]
 jq_poi_info = st_join(jq_poi,nj_jq_poly)
 summary=group_by(jq_poi_info,Name)%>% tally()
-dist=1:5*100
-
-for (i in 1:5)
-{nj_jq_poly_buffer[[i]]=st_buffer(nj_jq_poly,dist=buff_dist[i])
+buffer=list()
+buffer[[1]]=nj_jq_poly
+for(i in 2:6)
+  buffer[[i]]=st_buffer(nj_jq_poly,dist=(i-1)*100)
+buffer_belt=list()
+buffer_long=nj_jq_poly[,-3]
+buffer_long$Buff=0
+buffer_belt[[1]]=buffer_long
+for(i in 2:6){
+  buffer_inner=buffer[[i-1]] 
+  buffer_outer=buffer[[i]]
+  belt=map2(buffer_outer$geo,buffer_inner$geo,st_difference)%>% st_sfc(crs=4498)
+  
+  buffer_belt[[i]]=st_sf(Name=as.character(nj_jq$Name),Rate=nj_jq$Rate,Buff=(i-1)*100,geo=belt)
+  buffer_belt[[i]]
+  buffer_long=rbind(buffer_long,buffer_belt[[i]])
 }
-
-x=st_difference(buffer_100,nj_jq_poly)
-plot(x$geo)
-buffer_500 =nj_jq_poly_buffer[[5]]
-buffer_collect=list(buffer_100,buffer_200,buffer_300,buffer_400,buffer_500)
-buffer_poi=list()
-for(i in 1:5)
-buffer_poi[[i]]=nj_poi[buffer_collect[[i]],] %>% st_join(buffer_collect[[i]])
-
-
-nj_jq<-jqgeo%>% filter(city=='NJ') %>% 
-       dplyr::select('district','Name','keyword','height','Rate')
-nj_jq_buffer<-st_buffer(nj_jq,dist=1000)
+buffer_long
+zsl=filter(buffer_long,Name=='南京中山陵园风景区')
+saveRDS(buffer_long,'buffer_long.rds')
+tm_shape(buffer_belt[[1]])+tm_polygons()+
+  tm_shape(buffer_belt[[2]])+tm_polygons(col='blue')+
+  tm_shape(buffer_belt[[3]])+tm_polygons(col='red')+
+  tm_shape(buffer_belt[[4]])+tm_polygons(col='yellow')+
+  tm_shape(buffer_belt[[5]])+tm_polygons(col='green')+
+  tm_shape(buffer_belt[[6]])+tm_polygons(col='pink')
 
 #intersects
-jq_poi<-nj_poi[nj_jq_buffer,]
+x=filter(buffer_poi,Name=='南京中山陵园风景区')
+tm_shape(buffer_long[buffer_long$Name=='南京中山陵园风景区',])+tm_polygons()+
+  tm_shape(x)+tm_dots()
+tm_shape(zsl[6,])+tm_polygons()
+buffer_poi=nj_poi[buffer_long,] %>% st_join(buffer_long)
+saveRDS(buffer_poi,'buffer_poi.rds')
+poi = st_join(nj_poi,buffer_long)
+rim_n= group_by(buffer_poi,Name,大类)%>% tally()
+?group_by
+?aggregate
+poi_dup=poi%>% na.omit()
 plot(jq_poi$geo)
-jq_poi_zone<-st_join(jq_poi,nj_jq_buffer)
+jq_poi_zone<-st_join(buffer,nj_jq_buffer)
 tm_shape(nj_frame) +tm_polygons() +tm_shape(nj_jq_buffer)+tm_polygons()+qtm(nj_jq)
 
 #retail spatial model analysis
@@ -89,6 +104,5 @@ x<-as(nj_retail_sp,'ppp')
 x$x
 x$n
 x$window
-
 
  
